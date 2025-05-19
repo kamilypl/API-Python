@@ -16,7 +16,7 @@ def gerar_pptx():
     slide_layout = prs.slide_layouts[1]  # Título + conteúdo
 
     slide = prs.slides.add_slide(slide_layout)
-    slide.shapes.title.text = f"{data.get('setor', '')} – {data.get('titulo', '')}"
+    slide.shapes.title.text = f"{data.get('titulo', '')}"
     corpo = slide.placeholders[1]
     corpo.text = f"{data.get('resumo', '')}\n\n{data.get('link', '')}\nData: {data.get('data', '')}"
 
