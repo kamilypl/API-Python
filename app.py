@@ -26,8 +26,12 @@ def gerar_pptx():
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
 
-        return send_file(temp_file.name, as_attachment=True, download_name="noticia.pptx",
-                         mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation")
+        return send_file(
+            temp_file.name,
+            as_attachment=True,
+            download_name="noticia.pptx",
+            mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
 
     except Exception as e:
         print("🔥 Erro interno:", str(e))
@@ -35,3 +39,5 @@ def gerar_pptx():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+
+
