@@ -17,13 +17,13 @@ def gerar_pptx():
         slide = prs.slides.add_slide(slide_layout)
 
         # Preencher título (com verificação segura)
-        if slide.shapes.title is not None:
-            slide.shapes.title.text = data.get('titulo', '')
+        #if slide.shapes.title is not None:
+            #slide.shapes.title.text = data.get('titulo', '')!!!!!!
 
         # Preencher corpo (com verificação segura)
         if len(slide.placeholders) > 1:
             corpo = slide.placeholders[1]
-            corpo.text = f"{data.get('resumo', '')}\n\n{data.get('link', '')}\nData: {data.get('data', '')}"
+            corpo.text = f"{data.get('titulo', '')}\n\nData:{data.get('data', '')}\n\n{data.get('resumo', '')}\n\nFonte: {data.get('link', '')}"
 
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
