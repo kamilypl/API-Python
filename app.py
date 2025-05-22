@@ -21,12 +21,16 @@ def gerar_pptx():
                 continue
 
             noticia = noticias[preenchidos]
+
             for paragraph in shape.text_frame.paragraphs:
                 for run in paragraph.runs:
-                    run.text = run.text.replace("{{titulo}}", noticia.get("titulo", ""))
-                    run.text = run.text.replace("{{resumo}}", noticia.get("resumo", ""))
-                    run.text = run.text.replace("{{data}}", noticia.get("data", ""))
-                    run.text = run.text.replace("{{link}}", noticia.get("link", ""))
+                    texto = run.text
+                    texto = texto.replace("{{titulo}}", noticia.get("titulo", ""))
+                    texto = texto.replace("{{resumo}}", "\n" + noticia.get("resumo", ""))
+                    texto = texto.replace("{{data}}", "\nData: " + noticia.get("data", ""))
+                    texto = texto.replace("{{link}}", "\n" + noticia.get("link", ""))
+                    run.text = texto
+
             preenchidos += 1
 
         print(f"✅ Blocos preenchidos: {preenchidos}")
