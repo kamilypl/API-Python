@@ -3,50 +3,36 @@ from pptx import Presentation
 import tempfile
 import os
 
-app = Flask(__name__)
-TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.pptx')
-
 @app.route("/gerar_pptx", methods=["POST"])
 def gerar_pptx():
     try:
-        dados = request.json
-        noticias = dados.get("noticias", [])
+        req = request.json
+        print("🔹 Dados recebidos:", req)
+
+        noticias = req.get("noticias", [])
+        if not noticias:
+            return {"erro": "Nenhuma notícia recebida"}, 400
+
+        noticia = noticias[0]  # Pega apenas a primeira para o slide atual
 
         prs = Presentation(TEMPLATE_PATH)
-        slide = prs.slides[0]
-        preenchidos = 0
+        slide = prs.slides.add_slide(prs.slide_layouts[6])  # Slide vazio
 
+        # Substituição manual dos placeholders
         for shape in slide.shapes:
-            if not shape.has_text_frame or preenchidos >= len(noticias):
+            if not shape.has_text_frame:
                 continue
-
-            noticia = noticias[preenchidos]
-
-            for paragraph in shape.text_frame.paragraphs:
-                for run in paragraph.runs:
-                    texto = run.text
-                    texto = texto.replace("{{titulo}}", noticia.get("titulo", ""))
-                    texto = texto.replace("{{resumo}}", "\n" + noticia.get("resumo", ""))
-                    texto = texto.replace("{{data}}", "\nData: " + noticia.get("data", ""))
-                    texto = texto.replace("{{link}}", "\n" + noticia.get("link", ""))
-                    run.text = texto
-
-            preenchidos += 1
-
-        print(f"✅ Blocos preenchidos: {preenchidos}")
+            shape.text = shape.text.replace("{{titulo}}", noticia.get("titulo", ""))
+            shape.text = shape.text.replace("{{resumo}}", noticia.get("resumo", ""))
+            shape.text = shape.text.replace("{{data}}", noticia.get("data", ""))
+            shape.text = shape.text.replace("{{link}}", noticia.get("link", ""))
 
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
 
-        return send_file(
-            temp_file.name,
-            as_attachment=True,
-            download_name="noticias_atualizadas.pptx",
-            mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-        )
-
+        return send_file(temp_file.name, as_attachment=True, download_name="noticia.pptx")
     except Exception as e:
-        print("🔥 Erro interno:", str(e))
+        print("🔥 Erro:", str(e))
         return {"erro": str(e)}, 500
 
 if __name__ == "__main__":
