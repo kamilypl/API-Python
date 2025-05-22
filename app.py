@@ -1,5 +1,3 @@
-from pptx import Presentation
-
 from flask import Flask, request, send_file
 from pptx import Presentation
 import tempfile
@@ -13,31 +11,31 @@ def gerar_pptx():
     try:
         dados = request.json
         noticias = dados.get("noticias", [])
-
-        print(f"🔹 Recebido {len(noticias)} notícias")
-
         prs = Presentation(TEMPLATE_PATH)
-        slide = prs.slides[0]  # Assume que o primeiro slide tem os 6 blocos de texto
+        slide = prs.slides[0]
 
-        # Preenche os shapes com os dados das notícias, respeitando a ordem
-        shape_index = 0
-        for noticia in noticias:
-            if shape_index >= len(slide.shapes):
-                print("⚠️ Mais notícias que caixas de texto disponíveis")
-                break
+        print(f"🔹 Notícias recebidas: {len(noticias)}")
 
-            shape = slide.shapes[shape_index]
-            if shape.has_text_frame:
-                shape.text_frame.clear()
-                shape.text_frame.text = (
-                    f"Título: {noticia.get('titulo', '')}\n"
-                    f"Data: {noticia.get('data', '')}\n"
-                    f"Resumo: {noticia.get('resumo', '')}\n"
-                    f"Fonte: {noticia.get('link', '')}"
-                )
-                shape_index += 1
+        # Preenche os campos com base em {{titulo}}, {{resumo}}, etc.
+        preenchidos = 0
+        for shape in slide.shapes:
+            if not shape.has_text_frame:
+                continue
 
-        # Salva em arquivo temporário
+            texto_original = shape.text
+
+            if '{{titulo}}' in texto_original and preenchidos < len(noticias):
+                noticia = noticias[preenchidos]
+                novo_texto = texto_original \
+                    .replace('{{titulo}}', noticia.get('titulo', '')) \
+                    .replace('{{resumo}}', noticia.get('resumo', '')) \
+                    .replace('{{data}}', noticia.get('data', '')) \
+                    .replace('{{link}}', noticia.get('link', ''))
+                shape.text = novo_texto
+                preenchidos += 1
+
+        print(f"✅ Blocos preenchidos: {preenchidos}")
+
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
 
