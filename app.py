@@ -11,28 +11,23 @@ def gerar_pptx():
     try:
         dados = request.json
         noticias = dados.get("noticias", [])
+
         prs = Presentation(TEMPLATE_PATH)
         slide = prs.slides[0]
-
-        print(f"🔹 Notícias recebidas: {len(noticias)}")
-
-        # Preenche os campos com base em {{titulo}}, {{resumo}}, etc.
         preenchidos = 0
+
         for shape in slide.shapes:
-            if not shape.has_text_frame:
+            if not shape.has_text_frame or preenchidos >= len(noticias):
                 continue
 
-            texto_original = shape.text
-
-            if '{{titulo}}' in texto_original and preenchidos < len(noticias):
-                noticia = noticias[preenchidos]
-                novo_texto = texto_original \
-                    .replace('{{titulo}}', noticia.get('titulo', '')) \
-                    .replace('{{resumo}}', noticia.get('resumo', '')) \
-                    .replace('{{data}}', noticia.get('data', '')) \
-                    .replace('{{link}}', noticia.get('link', ''))
-                shape.text = novo_texto
-                preenchidos += 1
+            noticia = noticias[preenchidos]
+            for paragraph in shape.text_frame.paragraphs:
+                for run in paragraph.runs:
+                    run.text = run.text.replace("{{titulo}}", noticia.get("titulo", ""))
+                    run.text = run.text.replace("{{resumo}}", noticia.get("resumo", ""))
+                    run.text = run.text.replace("{{data}}", noticia.get("data", ""))
+                    run.text = run.text.replace("{{link}}", noticia.get("link", ""))
+            preenchidos += 1
 
         print(f"✅ Blocos preenchidos: {preenchidos}")
 
