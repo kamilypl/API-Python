@@ -1,63 +1,56 @@
 from flask import Flask, request, send_file
 from pptx import Presentation
-from pptx.util import Pt
 import tempfile
 import os
 
 # Cria a aplicação Flask
 app = Flask(__name__)
 
-# Define o caminho do template PowerPoint (template.pptx) baseado no diretório atual do script
+# Caminho do template .pptx
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.pptx')
 
-# Rota que aceita POST para gerar o PPTX com as notícias
 @app.route("/gerar_pptx", methods=["POST"])
 def gerar_pptx():
     try:
-        # Lê o corpo da requisição e extrai a lista de notícias
+        # Lê os dados JSON enviados no corpo da requisição
         dados = request.json
         noticias = dados.get("noticias", [])
 
-        # Carrega o template PPTX
+        # Carrega o arquivo PowerPoint modelo
         prs = Presentation(TEMPLATE_PATH)
-        slide = prs.slides[0]
+        slide = prs.slides[0]  # Considera apenas o primeiro slide
 
-        preenchidos = 0  # Contador de caixas preenchidas
+        preenchidos = 0  # Contador de blocos preenchidos
 
-        # Itera pelas shapes do slide
         for shape in slide.shapes:
             if not shape.has_text_frame or preenchidos >= len(noticias):
                 continue
 
             noticia = noticias[preenchidos]
 
-            for paragraph in shape.text_frame.paragraphs:
-                # Junta todo o texto do parágrafo, incluindo runs separados
-                texto_total = "".join(run.text for run in paragraph.runs)
+            # Captura o texto atual da caixa
+            texto_original = shape.text_frame.text
 
-                # Substitui os placeholders pelos dados reais
-                texto_formatado = (
-                    texto_total
-                    .replace("{{titulo}}", noticia.get("titulo", ""))
-                    .replace("{{resumo}}", "\n" + noticia.get("resumo", ""))
-                    .replace("{{data}}", "\nData: " + noticia.get("data", ""))
-                    .replace("{{link}}", "\n" + noticia.get("link", ""))
-                )
+            # Substitui os placeholders pelos valores da notícia
+            texto_formatado = (
+                texto_original
+                .replace("{{titulo}}", noticia.get("titulo", ""))
+                .replace("{{resumo}}", "\n" + noticia.get("resumo", ""))
+                .replace("{{data}}", "\nData: " + noticia.get("data", ""))
+                .replace("{{link}}", "\n" + noticia.get("link", ""))
+            )
 
-                # Remove todos os runs antigos do parágrafo
-                while paragraph.runs:
-                    paragraph._element.remove(paragraph.runs[0]._element)
+            # Limpa a caixa de texto inteira
+            shape.text_frame.clear()
 
-                # Cria um novo run e define o texto formatado
-                run = paragraph.add_run()
-                run.text = texto_formatado
-                run.font.size = Pt(12)  # Ajuste de tamanho conforme o template
+            # Insere o texto formatado no primeiro parágrafo
+            shape.text_frame.paragraphs[0].text = texto_formatado
 
-            preenchidos += 1  # Próxima notícia
+            preenchidos += 1
 
         print(f"✅ Blocos preenchidos: {preenchidos}")
 
-        # Salva o arquivo final como temporário
+        # Cria um arquivo temporário para salvar a nova apresentação
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
 
@@ -73,6 +66,6 @@ def gerar_pptx():
         print("🔥 Erro interno:", str(e))
         return {"erro": str(e)}, 500
 
-# Roda o servidor Flask na porta 10000
+# Roda o servidor
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
