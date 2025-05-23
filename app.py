@@ -3,24 +3,19 @@ from pptx import Presentation
 import tempfile
 import os
 
-# Cria a aplicação Flask
 app = Flask(__name__)
-
-# Caminho do template .pptx
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.pptx')
 
 @app.route("/gerar_pptx", methods=["POST"])
 def gerar_pptx():
     try:
-        # Lê os dados JSON enviados no corpo da requisição
         dados = request.json
         noticias = dados.get("noticias", [])
 
-        # Carrega o arquivo PowerPoint modelo
         prs = Presentation(TEMPLATE_PATH)
-        slide = prs.slides[0]  # Considera apenas o primeiro slide
+        slide = prs.slides[0]
 
-        preenchidos = 0  # Contador de blocos preenchidos
+        preenchidos = 0
 
         for shape in slide.shapes:
             if not shape.has_text_frame or preenchidos >= len(noticias):
@@ -28,24 +23,25 @@ def gerar_pptx():
 
             noticia = noticias[preenchidos]
 
-            for paragraph in shape.text_frame.paragraphs:
-                for run in paragraph.runs:
-                    texto = run.text
-                    texto = texto.replace("{{titulo}}", noticia.get("titulo", ""))
-                    texto = texto.replace("{{resumo}}", noticia.get("resumo", ""))
-                    texto = texto.replace("{{data}}", "Data: " + noticia.get("data", ""))
-                    texto = texto.replace("{{link}}", noticia.get("link", ""))
-                    run.text = texto
+            texto_original = shape.text  # Agora pegamos o texto bruto do shape
+
+            texto_formatado = (
+                texto_original
+                .replace("{{titulo}}", noticia.get("titulo", ""))
+                .replace("{{resumo}}", noticia.get("resumo", ""))
+                .replace("{{data}}", noticia.get("data", ""))
+                .replace("{{link}}", noticia.get("link", ""))
+            )
+
+            shape.text = texto_formatado  # Substituímos diretamente o conteúdo da caixa
 
             preenchidos += 1
 
         print(f"✅ Blocos preenchidos: {preenchidos}")
 
-        # Cria um arquivo temporário para salvar a nova apresentação
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
 
-        # Retorna o arquivo como resposta
         return send_file(
             temp_file.name,
             as_attachment=True,
@@ -57,7 +53,5 @@ def gerar_pptx():
         print("🔥 Erro interno:", str(e))
         return {"erro": str(e)}, 500
 
-# Roda o servidor
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
-
