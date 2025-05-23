@@ -14,27 +14,25 @@ def gerar_pptx():
 
         prs = Presentation(TEMPLATE_PATH)
         slide = prs.slides[0]
-
         preenchidos = 0
 
+        # Percorre todos os shapes
         for shape in slide.shapes:
-            if not shape.has_text_frame or preenchidos >= len(noticias):
+            if not shape.has_text_frame:
                 continue
+            if preenchidos >= len(noticias):
+                break
 
             noticia = noticias[preenchidos]
-
-            texto_original = shape.text  # Agora pegamos o texto bruto do shape
-
             texto_formatado = (
-                texto_original
-                .replace("{{titulo}}", noticia.get("titulo", ""))
-                .replace("{{resumo}}", noticia.get("resumo", ""))
-                .replace("{{data}}", noticia.get("data", ""))
-                .replace("{{link}}", noticia.get("link", ""))
+                f"{noticia.get('titulo', '')}\n"
+                f"{noticia.get('resumo', '')}\n"
+                f"Data: {noticia.get('data', '')}\n"
+                f"{noticia.get('link', '')}"
             )
 
-            shape.text = texto_formatado  # Substituímos diretamente o conteúdo da caixa
-
+            shape.text_frame.clear()
+            shape.text_frame.paragraphs[0].text = texto_formatado
             preenchidos += 1
 
         print(f"✅ Blocos preenchidos: {preenchidos}")
