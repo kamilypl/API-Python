@@ -28,23 +28,14 @@ def gerar_pptx():
 
             noticia = noticias[preenchidos]
 
-            # Captura o texto atual da caixa
-            texto_original = shape.text_frame.text
-
-            # Substitui os placeholders pelos valores da notícia
-            texto_formatado = (
-                texto_original
-                .replace("{{titulo}}", noticia.get("titulo", ""))
-                .replace("{{resumo}}", "\n" + noticia.get("resumo", ""))
-                .replace("{{data}}", "\nData: " + noticia.get("data", ""))
-                .replace("{{link}}", "\n" + noticia.get("link", ""))
-            )
-
-            # Limpa a caixa de texto inteira
-            shape.text_frame.clear()
-
-            # Insere o texto formatado no primeiro parágrafo
-            shape.text_frame.paragraphs[0].text = texto_formatado
+            for paragraph in shape.text_frame.paragraphs:
+                for run in paragraph.runs:
+                    texto = run.text
+                    texto = texto.replace("{{titulo}}", noticia.get("titulo", ""))
+                    texto = texto.replace("{{resumo}}", noticia.get("resumo", ""))
+                    texto = texto.replace("{{data}}", "Data: " + noticia.get("data", ""))
+                    texto = texto.replace("{{link}}", noticia.get("link", ""))
+                    run.text = texto
 
             preenchidos += 1
 
@@ -69,3 +60,4 @@ def gerar_pptx():
 # Roda o servidor
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+
