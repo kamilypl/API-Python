@@ -1,5 +1,6 @@
 from flask import Flask, request, send_file
 from pptx import Presentation
+from pptx.util import Pt
 import tempfile
 import os
 
@@ -9,40 +10,32 @@ app = Flask(__name__)
 # Define o caminho do template PowerPoint (template.pptx) baseado no diretório atual do script
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.pptx')
 
-# Define uma rota chamada "/gerar_pptx" que aceita requisições do tipo POST
+# Rota que aceita POST para gerar o PPTX com as notícias
 @app.route("/gerar_pptx", methods=["POST"])
 def gerar_pptx():
     try:
-        # Lê o corpo JSON da requisição recebida
+        # Lê o corpo da requisição e extrai a lista de notícias
         dados = request.json
-
-        # Extrai a lista de notícias do dicionário (ou uma lista vazia se não houver "noticias")
         noticias = dados.get("noticias", [])
 
-        # Carrega a apresentação base (template)
+        # Carrega o template PPTX
         prs = Presentation(TEMPLATE_PATH)
-
-        # Seleciona o primeiro slide do template
         slide = prs.slides[0]
 
-        # Variável para contar quantas caixas de texto foram preenchidas
-        preenchidos = 0
+        preenchidos = 0  # Contador de caixas preenchidas
 
-        # Itera por todas as formas (shapes) do slide
+        # Itera pelas shapes do slide
         for shape in slide.shapes:
-            # Pula se o shape não tem quadro de texto ou se já preencheu todas as notícias
             if not shape.has_text_frame or preenchidos >= len(noticias):
                 continue
 
-            # Pega a notícia correspondente ao índice atual
             noticia = noticias[preenchidos]
 
-            # Itera pelos parágrafos do quadro de texto
             for paragraph in shape.text_frame.paragraphs:
-                # Junta todo o conteúdo dos "runs" (partes de texto com formatação individual)
+                # Junta todo o texto do parágrafo, incluindo runs separados
                 texto_total = "".join(run.text for run in paragraph.runs)
 
-                # Substitui os marcadores com os dados da notícia
+                # Substitui os placeholders pelos dados reais
                 texto_formatado = (
                     texto_total
                     .replace("{{titulo}}", noticia.get("titulo", ""))
@@ -51,37 +44,35 @@ def gerar_pptx():
                     .replace("{{link}}", "\n" + noticia.get("link", ""))
                 )
 
-                # Limpa o texto de todos os runs
-                for run in paragraph.runs:
-                    run.text = ""
+                # Remove todos os runs antigos do parágrafo
+                while paragraph.runs:
+                    paragraph._element.remove(paragraph.runs[0]._element)
 
-                # Atribui o texto formatado ao primeiro run, se houver
-                if paragraph.runs:
-                    paragraph.runs[0].text = texto_formatado
+                # Cria um novo run e define o texto formatado
+                run = paragraph.add_run()
+                run.text = texto_formatado
+                run.font.size = Pt(12)  # Ajuste de tamanho conforme o template
 
-            # Incrementa o contador de blocos preenchidos
-            preenchidos += 1
+            preenchidos += 1  # Próxima notícia
 
-        # Exibe no console o número de blocos preenchidos com sucesso
         print(f"✅ Blocos preenchidos: {preenchidos}")
 
-        # Cria um arquivo temporário com extensão .pptx
+        # Salva o arquivo final como temporário
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
-
-        # Salva a apresentação modificada nesse arquivo temporário
         prs.save(temp_file.name)
 
-        # Envia o arquivo gerado como resposta para download
+        # Retorna o arquivo como resposta
         return send_file(
             temp_file.name,
-            as_attachment=True,  # Faz o navegador baixar o arquivo
-            download_name="noticias_atualizadas.pptx",  # Nome sugerido para o arquivo baixado
-            mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation"  # Tipo MIME de arquivos PowerPoint
+            as_attachment=True,
+            download_name="noticias_atualizadas.pptx",
+            mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation"
         )
 
     except Exception as e:
         print("🔥 Erro interno:", str(e))
         return {"erro": str(e)}, 500
 
+# Roda o servidor Flask na porta 10000
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
