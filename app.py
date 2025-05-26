@@ -14,28 +14,21 @@ def gerar_pptx():
 
         prs = Presentation(TEMPLATE_PATH)
         slide = prs.slides[0]
-        preenchidos = 0
 
-        # Percorre todos os shapes
-        for shape in slide.shapes:
-            if not shape.has_text_frame:
-                continue
-            if preenchidos >= len(noticias):
-                break
+        for i, noticia in enumerate(noticias):
+            for shape in slide.shapes:
+                if not shape.has_text_frame:
+                    continue
+                texto = shape.text_frame.text
 
-            noticia = noticias[preenchidos]
-            texto_formatado = (
-                f"{noticia.get('titulo', '')}\n"
-                f"{noticia.get('resumo', '')}\n"
-                f"Data: {noticia.get('data', '')}\n"
-                f"{noticia.get('link', '')}"
-            )
-
-            shape.text_frame.clear()
-            shape.text_frame.paragraphs[0].text = texto_formatado
-            preenchidos += 1
-
-        print(f"✅ Blocos preenchidos: {preenchidos}")
+                if f"{{{{titulo{i}}}}}" in texto:
+                    shape.text_frame.text = noticia.get('titulo', '')
+                elif f"{{{{resumo{i}}}}}" in texto:
+                    shape.text_frame.text = noticia.get('resumo', '')
+                elif f"{{{{data{i}}}}}" in texto:
+                    shape.text_frame.text = noticia.get('data', '')
+                elif f"{{{{link{i}}}}}" in texto:
+                    shape.text_frame.text = noticia.get('link', '')
 
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
