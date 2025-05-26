@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file 
 from pptx import Presentation
 import tempfile
 import os
@@ -19,16 +19,19 @@ def gerar_pptx():
             for shape in slide.shapes:
                 if not shape.has_text_frame:
                     continue
-                texto = shape.text_frame.text
 
-                if f"{{{{titulo{i}}}}}" in texto:
-                    shape.text_frame.text = noticia.get('titulo', '')
-                elif f"{{{{resumo{i}}}}}" in texto:
-                    shape.text_frame.text = noticia.get('resumo', '')
-                elif f"{{{{data{i}}}}}" in texto:
-                    shape.text_frame.text = noticia.get('data', '')
-                elif f"{{{{link{i}}}}}" in texto:
-                    shape.text_frame.text = noticia.get('link', '')
+                text_frame = shape.text_frame
+                text = text_frame.text
+
+                # Substituir apenas se o placeholder estiver contido no texto
+                if f"{{{{titulo{i}}}}}" in text:
+                    text_frame.text = text.replace(f"{{{{titulo{i}}}}}", noticia.get("titulo", ""))
+                if f"{{{{resumo{i}}}}}" in text:
+                    text_frame.text = text_frame.text.replace(f"{{{{resumo{i}}}}}", noticia.get("resumo", ""))
+                if f"{{{{data{i}}}}}" in text:
+                    text_frame.text = text_frame.text.replace(f"{{{{data{i}}}}}", noticia.get("data", ""))
+                if f"{{{{link{i}}}}}" in text:
+                    text_frame.text = text_frame.text.replace(f"{{{{link{i}}}}}", noticia.get("link", ""))
 
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
