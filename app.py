@@ -12,18 +12,18 @@ def gerar_pptx():
         dados = request.json
         print("🧾 JSON recebido:")
         print(dados)
+
         noticias = dados.get("noticias", [])
 
         prs = Presentation(TEMPLATE_PATH)
         slide = prs.slides[0]
 
-        for i, noticia in enumerate(noticias):
-            for shape in slide.shapes:
-                if not shape.has_text_frame:
-                    continue
-
-                for paragraph in shape.text_frame.paragraphs:
-                    for run in paragraph.runs:
+        for shape in slide.shapes:
+            if not shape.has_text_frame:
+                continue
+            for paragraph in shape.text_frame.paragraphs:
+                for run in paragraph.runs:
+                    for i, noticia in enumerate(noticias):
                         run.text = run.text.replace(f"{{{{titulo{i}}}}}", noticia.get("titulo", ""))
                         run.text = run.text.replace(f"{{{{resumo{i}}}}}", noticia.get("resumo", ""))
                         run.text = run.text.replace(f"{{{{data{i}}}}}", noticia.get("data", ""))
