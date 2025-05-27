@@ -10,6 +10,8 @@ TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.pptx')
 def gerar_pptx():
     try:
         dados = request.json
+        print("🧾 JSON recebido:")
+        print(dados)
         noticias = dados.get("noticias", [])
 
         prs = Presentation(TEMPLATE_PATH)
