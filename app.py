@@ -4,8 +4,8 @@ import io
 
 app = Flask(__name__)
 
-@app.route('/preencher_ppt', methods=['POST'])
-def preencher_ppt():
+@app.route('/gerar_ppt', methods=['POST'])
+def gerar_ppt():
     dados = request.json
 
     # Carrega o template
