@@ -1,29 +1,43 @@
 from flask import Flask, request, send_file
 from pptx import Presentation
-import io
+import tempfile
+import os
 
 app = Flask(__name__)
+TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.pptx')
 
-@app.route('/gerar_pptx', methods=['POST'])
+@app.route("/gerar_pptx", methods=["POST"])
 def gerar_pptx():
-    dados = request.json
+    try:
+        data = request.json
+        print("🔹 Dados recebidos:", data)
 
-    # Carrega o template
-    prs = Presentation('template.pptx')
+        prs = Presentation(TEMPLATE_PATH)
+        slide_layout = prs.slide_layouts[1]  # Título e Conteúdo
+        slide = prs.slides.add_slide(slide_layout)
 
-    for slide in prs.slides:
-        for shape in slide.shapes:
-            if shape.has_text_frame:
-                text = shape.text
-                for chave, valor in dados.items():
-                    if f"{{{{{chave}}}}}" in text:
-                        shape.text = text.replace(f"{{{{{chave}}}}}", valor)
+        # Preencher título (com verificação segura)
+        #if slide.shapes.title is not None:
+            #slide.shapes.title.text = data.get('titulo', '')!!!!!!
 
-    output = io.BytesIO()
-    prs.save(output)
-    output.seek(0)
+        # Preencher corpo (com verificação segura)
+        if len(slide.placeholders) > 1:
+            corpo = slide.placeholders[1]
+            corpo.text = f"{data.get('titulo', '')}\n\nData:{data.get('data', '')}\n\n{data.get('resumo', '')}\n\nFonte: {data.get('link', '')}"
 
-    return send_file(output, download_name="output.pptx", as_attachment=True)
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
+        prs.save(temp_file.name)
 
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)
+        return send_file(
+            temp_file.name,
+            as_attachment=True,
+            download_name="noticia.pptx",
+            mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+
+    except Exception as e:
+        print("🔥 Erro interno:", str(e))
+        return {"erro": str(e)}, 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
