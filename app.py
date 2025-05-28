@@ -1,3 +1,4 @@
+import re
 from flask import Flask, request, send_file
 from pptx import Presentation
 from pptx.util import Pt
@@ -8,44 +9,45 @@ import os
 app = Flask(__name__)
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.pptx')
 
-def aplicar_texto_formatado(shape, chave, valor):
-    """Aplica estilos diferentes dependendo da chave."""
-    tf = shape.text_frame
-    tf.clear()
-    p = tf.paragraphs[0]
-    run = p.add_run()
-    run.text = str(valor).replace("\\n", "\n")
-
-    if "titulo" in chave:
-        run.font.bold = True
-        run.font.size = Pt(20)
-    elif "resumo" in chave:
-        run.font.size = Pt(14)
-    elif "data" in chave:
-        run.font.italic = True
-        run.font.size = Pt(12)
-        run.font.color.rgb = RGBColor(120, 120, 120)
-    elif "link" in chave:
-        run.font.size = Pt(12)
-        run.font.underline = True
-        run.font.color.rgb = RGBColor(0, 102, 204)
-
 @app.route("/gerar_pptx", methods=["POST"])
 def gerar_pptx():
     try:
         data = request.json
-        print("🔹 Dados recebidos:", data)
-
         prs = Presentation(TEMPLATE_PATH)
 
         for slide in prs.slides:
             for shape in slide.shapes:
                 if shape.has_text_frame:
-                    for chave, valor in data.items():
-                        marcador = f"{{{{{chave}}}}}"
-                        if shape.text.strip() == marcador:
-                            aplicar_texto_formatado(shape, chave, valor)
+                    texto = shape.text
 
+                    # Encontra todos os {{campos}} no shape
+                    campos = re.findall(r"\{\{(\w+)\}\}", texto)
+                    if campos:
+                        tf = shape.text_frame
+                        tf.clear()
+
+                        for campo in campos:
+                            valor = str(data.get(campo, f"{{{{{campo}}}}}")).replace("\\n", "\n")
+                            p = tf.add_paragraph()
+                            run = p.add_run()
+                            run.text = valor
+
+                            # Formatação por tipo de campo
+                            if "titulo" in campo:
+                                run.font.bold = True
+                                run.font.size = Pt(20)
+                            elif "data" in campo:
+                                run.font.italic = True
+                                run.font.size = Pt(12)
+                                run.font.color.rgb = RGBColor(120, 120, 120)
+                            elif "resumo" in campo:
+                                run.font.size = Pt(14)
+                            elif "link" in campo:
+                                run.font.size = Pt(12)
+                                run.font.underline = True
+                                run.font.color.rgb = RGBColor(0, 102, 204)
+
+        # Salva o arquivo gerado
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
 
@@ -55,9 +57,7 @@ def gerar_pptx():
             download_name="noticias_geradas.pptx",
             mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation"
         )
-
     except Exception as e:
-        print("🔥 Erro interno:", str(e))
         return {"erro": str(e)}, 500
 
 if __name__ == "__main__":
