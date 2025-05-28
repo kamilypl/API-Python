@@ -36,16 +36,17 @@ def gerar_pptx():
                             if "titulo" in campo:
                                 run.font.bold = True
                                 run.font.size = Pt(20)
+                                run.font.color.rgb = RGBColor(124, 124, 124)
                             elif "data" in campo:
                                 run.font.italic = True
                                 run.font.size = Pt(12)
-                                run.font.color.rgb = RGBColor(120, 120, 120)
+                                run.font.color.rgb = RGBColor(124, 124, 124)
                             elif "resumo" in campo:
                                 run.font.size = Pt(14)
                             elif "link" in campo:
                                 run.font.size = Pt(12)
                                 run.font.underline = True
-                                run.font.color.rgb = RGBColor(0, 102, 204)
+                                run.font.color.rgb = RGBColor(255, 0, 0)
 
         # Salva o arquivo gerado
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
