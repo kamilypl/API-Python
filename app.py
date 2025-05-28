@@ -36,7 +36,7 @@ def gerar_pptx():
                             # Formatação por tipo de campo
                             if "titulo" in campo:
                                 run.font.bold = True
-                                run.font.size = Pt(18)
+                                run.font.size = Pt(15)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
                                 p.alignment = PP_ALIGN.JUSTIFY  # aplica justificado no parágrafo
@@ -55,11 +55,11 @@ def gerar_pptx():
                                 p.alignment = PP_ALIGN.JUSTIFY
 
                             elif "link" in campo:
-                                run.font.size = Pt(10)
+                                run.font.size = Pt(8)
                                 run.font.underline = True
                                 run.font.color.rgb = RGBColor(255, 0, 0)
                                 run.font.name = "Poppins"
-                                
+
 
         # Salva o arquivo gerado
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
