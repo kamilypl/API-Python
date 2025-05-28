@@ -49,8 +49,8 @@ def gerar_pptx():
 
                             elif "resumo" in campo:
                                 run.font.size = Pt(14)
-                                 run.font.color.rgb = RGBColor(124, 124, 124)
-                                 run.font.name = "Poppins"
+                                run.font.color.rgb = RGBColor(124, 124, 124)
+                                run.font.name = "Poppins"
 
                             elif "link" in campo:
                                 run.font.size = Pt(12)
