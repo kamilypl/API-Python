@@ -2,6 +2,7 @@ import re
 from flask import Flask, request, send_file
 from pptx import Presentation
 from pptx.util import Pt
+from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 import tempfile
 import os
@@ -37,16 +38,25 @@ def gerar_pptx():
                                 run.font.bold = True
                                 run.font.size = Pt(20)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
+                                run.font.name = "Poppins"
+                                p.alignment = PP_ALIGN.JUSTIFY  # aplica justificado no parágrafo
+
                             elif "data" in campo:
                                 run.font.italic = True
                                 run.font.size = Pt(12)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
+                                run.font.name = "Poppins"
+
                             elif "resumo" in campo:
                                 run.font.size = Pt(14)
+                                 run.font.color.rgb = RGBColor(124, 124, 124)
+                                 run.font.name = "Poppins"
+
                             elif "link" in campo:
                                 run.font.size = Pt(12)
                                 run.font.underline = True
                                 run.font.color.rgb = RGBColor(255, 0, 0)
+                                run.font.name = "Poppins"
 
         # Salva o arquivo gerado
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
