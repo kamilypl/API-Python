@@ -49,7 +49,7 @@ def gerar_pptx():
                                 
 
                             elif "resumo" in campo:
-                                run.font.size = Pt(14)
+                                run.font.size = Pt(8)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
                                 p.alignment = PP_ALIGN.JUSTIFY
