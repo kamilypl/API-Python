@@ -48,7 +48,7 @@ def gerar_pptx():
 
                             # 🎨 ESTILO POR CAMPO
                             if "titulo" in campo.lower():
-                                run.font.bold = True
+                                #run.font.bold = True
                                 run.font.size = Pt(15)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
@@ -61,7 +61,7 @@ def gerar_pptx():
                                 run.font.name = "Poppins"
 
                             elif "resumo" in campo.lower():
-                                run.font.size = Pt(13)
+                                run.font.size = Pt(11)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
                                 p.alignment = PP_ALIGN.JUSTIFY
