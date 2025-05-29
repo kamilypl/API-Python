@@ -50,19 +50,19 @@ def gerar_pptx():
                             if "titulo" in campo.lower():
                                 #run.font.bold = True
                                 run.font.size = Pt(15)
-                                run.font.color.rgb = RGBColor(124, 124, 124)
+                                run.font.color.rgb = RGBColor(121, 121, 121)
                                 run.font.name = "Poppins"
                                 p.alignment = PP_ALIGN.JUSTIFY
 
                             elif "data" in campo.lower():
                                 run.font.italic = True
                                 run.font.size = Pt(10)
-                                run.font.color.rgb = RGBColor(124, 124, 124)
+                                run.font.color.rgb = RGBColor(121, 121, 121)
                                 run.font.name = "Poppins"
 
                             elif "resumo" in campo.lower():
                                 run.font.size = Pt(11)
-                                run.font.color.rgb = RGBColor(124, 124, 124)
+                                run.font.color.rgb = RGBColor(121, 121, 121)
                                 run.font.name = "Poppins"
                                 p.alignment = PP_ALIGN.JUSTIFY
 
