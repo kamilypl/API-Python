@@ -33,13 +33,14 @@ def gerar_pptx():
 
                             # 🗓️ CONVERSÃO DE DATA ISO → BR
                             if "data" in campo.lower():
-                                match_iso = re.match(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})", valor)
+                                match_iso = re.match(r"(\d{4}-\d{2}-\d{2})", valor)  # Ajustado para pegar só a parte da data
                                 if match_iso:
                                     try:
-                                        dt = datetime.strptime(match_iso.group(1), "%Y-%m-%dT%H:%M:%S")
-                                        valor = dt.strftime("%d/%m/%Y %H:%M")
+                                        dt = datetime.strptime(match_iso.group(1), "%Y-%m-%d")
+                                        valor = dt.strftime("%d/%m/%Y")  # Apenas a data
                                     except Exception as e:
                                         print(f"⚠️ Erro ao converter data '{valor}': {e}")
+
 
                             p = tf.add_paragraph()
                             run = p.add_run()
@@ -68,9 +69,9 @@ def gerar_pptx():
                             elif "link" in campo.lower():
                                 run.font.size = Pt(8)
                                 run.font.underline = True
-                                run.font.color.rgb = RGBColor(255, 0, 0)
                                 run.font.name = "Poppins"
-                                # Não é possível tornar "clicável" só pelo pptx — precisa ser hiperlink adicionado com API específica
+                                run.hyperlink.address = valor
+                                run.font.color.rgb = RGBColor(255, 0, 0) 
 
         # 🔽 Salvar como arquivo temporário
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
