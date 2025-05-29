@@ -22,7 +22,6 @@ def gerar_pptx():
                 if shape.has_text_frame:
                     texto = shape.text
 
-                    # Encontra todos os {{campos}} no shape
                     campos = re.findall(r"\{\{(\w+)\}\}", texto)
                     if campos:
                         tf = shape.text_frame
@@ -31,46 +30,46 @@ def gerar_pptx():
                         for campo in campos:
                             valor = str(data.get(campo, f"{{{{{campo}}}}}")).replace("\\n", "\n")
 
-                            # Conversão da data ISO para formato brasileiro
-                            if "data" in campo:
+                            # 👉 Trata data no formato ISO (se identificada)
+                            if "data" in campo.lower() and re.match(r"\d{4}-\d{2}-\d{2}T", valor):
                                 try:
                                     dt = datetime.strptime(valor, "%Y-%m-%dT%H:%M:%SZ")
                                     valor = dt.strftime("%d/%m/%Y %H:%M")
                                 except Exception as e:
-                                    print(f"⚠️ Erro ao converter data: {valor} → {e}")
+                                    print(f"⚠️ Erro ao converter data '{valor}': {e}")
 
                             p = tf.add_paragraph()
                             run = p.add_run()
                             run.text = valor
 
-                            # Formatação por tipo de campo
-                            if "titulo" in campo:
+                            # 🎨 Formatação de acordo com o tipo
+                            if "titulo" in campo.lower():
                                 run.font.bold = True
                                 run.font.size = Pt(15)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
                                 p.alignment = PP_ALIGN.JUSTIFY
 
-                            elif "data" in campo:
+                            elif "data" in campo.lower():
                                 run.font.italic = True
-                                run.font.size = Pt(8)
+                                run.font.size = Pt(10)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
 
-                            elif "resumo" in campo:
-                                run.font.size = Pt(10)
+                            elif "resumo" in campo.lower():
+                                run.font.size = Pt(8)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
                                 p.alignment = PP_ALIGN.JUSTIFY
 
-                            elif "link" in campo:
+                            elif "link" in campo.lower():
                                 run.font.size = Pt(8)
                                 run.font.underline = True
                                 run.font.color.rgb = RGBColor(255, 0, 0)
                                 run.font.name = "Poppins"
-                                run.hyperlink.address = valor
+                                run.hyperlink.address = valor  # 🔗 Torna clicável
 
-        # Salva o arquivo gerado
+        # Salvar resultado
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
 
@@ -82,6 +81,7 @@ def gerar_pptx():
         )
 
     except Exception as e:
+        print("🔥 Erro interno:", str(e))
         return {"erro": str(e)}, 500
 
 if __name__ == "__main__":
