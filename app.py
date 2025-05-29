@@ -22,7 +22,7 @@ def gerar_pptx():
                 if shape.has_text_frame:
                     texto = shape.text
 
-                    # Identifica todos os {{campos}} dentro do texto do shape
+                    # Encontrar todos os {{campos}} presentes no texto
                     campos = re.findall(r"\{\{(\w+)\}\}", texto)
                     if campos:
                         tf = shape.text_frame
@@ -31,20 +31,21 @@ def gerar_pptx():
                         for campo in campos:
                             valor = str(data.get(campo, f"{{{{{campo}}}}}")).replace("\\n", "\n")
 
-                            # 👉 Se o campo for uma data no formato ISO, converte para o formato BR
-                            if "data" in campo.lower() and re.match(r"\d{4}-\d{2}-\d{2}T", valor):
-                                try:
-                                    dt = datetime.strptime(valor, "%Y-%m-%dT%H:%M:%SZ")
-                                    valor = dt.strftime("%d/%m/%Y %H:%M")
-                                except Exception as e:
-                                    print(f"⚠️ Erro ao converter data '{valor}': {e}")
+                            # 🗓️ CONVERSÃO DE DATA ISO → BR
+                            if "data" in campo.lower():
+                                match_iso = re.match(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})", valor)
+                                if match_iso:
+                                    try:
+                                        dt = datetime.strptime(match_iso.group(1), "%Y-%m-%dT%H:%M:%S")
+                                        valor = dt.strftime("%d/%m/%Y %H:%M")
+                                    except Exception as e:
+                                        print(f"⚠️ Erro ao converter data '{valor}': {e}")
 
-                            # Cria parágrafo e insere texto formatado
                             p = tf.add_paragraph()
                             run = p.add_run()
                             run.text = valor
 
-                            # 🎨 Estilos personalizados conforme o tipo de campo
+                            # 🎨 ESTILO POR CAMPO
                             if "titulo" in campo.lower():
                                 run.font.bold = True
                                 run.font.size = Pt(15)
@@ -69,9 +70,9 @@ def gerar_pptx():
                                 run.font.underline = True
                                 run.font.color.rgb = RGBColor(255, 0, 0)
                                 run.font.name = "Poppins"
-                                run.hyperlink.address = valor  # Torna o texto clicável
+                                # Não é possível tornar "clicável" só pelo pptx — precisa ser hiperlink adicionado com API específica
 
-        # Salva o arquivo gerado temporariamente
+        # 🔽 Salvar como arquivo temporário
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
         prs.save(temp_file.name)
 
@@ -83,7 +84,7 @@ def gerar_pptx():
         )
 
     except Exception as e:
-        print("🔥 Erro:", str(e))
+        print("🔥 Erro interno:", str(e))
         return {"erro": str(e)}, 500
 
 if __name__ == "__main__":
