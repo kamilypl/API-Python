@@ -4,6 +4,7 @@ from pptx import Presentation
 from pptx.util import Pt
 from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
+from datetime import datetime
 import tempfile
 import os
 
@@ -29,6 +30,15 @@ def gerar_pptx():
 
                         for campo in campos:
                             valor = str(data.get(campo, f"{{{{{campo}}}}}")).replace("\\n", "\n")
+
+                            # Conversão da data ISO para formato brasileiro
+                            if "data" in campo:
+                                try:
+                                    dt = datetime.strptime(valor, "%Y-%m-%dT%H:%M:%SZ")
+                                    valor = dt.strftime("%d/%m/%Y %H:%M")
+                                except Exception as e:
+                                    print(f"⚠️ Erro ao converter data: {valor} → {e}")
+
                             p = tf.add_paragraph()
                             run = p.add_run()
                             run.text = valor
@@ -39,17 +49,16 @@ def gerar_pptx():
                                 run.font.size = Pt(15)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
-                                p.alignment = PP_ALIGN.JUSTIFY  # aplica justificado no parágrafo
+                                p.alignment = PP_ALIGN.JUSTIFY
 
                             elif "data" in campo:
                                 run.font.italic = True
-                                run.font.size = Pt(10)
+                                run.font.size = Pt(8)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
-                                
 
                             elif "resumo" in campo:
-                                run.font.size = Pt(8)
+                                run.font.size = Pt(10)
                                 run.font.color.rgb = RGBColor(124, 124, 124)
                                 run.font.name = "Poppins"
                                 p.alignment = PP_ALIGN.JUSTIFY
@@ -59,7 +68,7 @@ def gerar_pptx():
                                 run.font.underline = True
                                 run.font.color.rgb = RGBColor(255, 0, 0)
                                 run.font.name = "Poppins"
-
+                                run.hyperlink.address = valor
 
         # Salva o arquivo gerado
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pptx")
@@ -71,6 +80,7 @@ def gerar_pptx():
             download_name="noticias_geradas.pptx",
             mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation"
         )
+
     except Exception as e:
         return {"erro": str(e)}, 500
 
